@@ -1,0 +1,8 @@
+username: your_cool_bot
+password: very_secure_p4ssW0RD
+
+tier: 1v1 # case sensitive
+
+poll_length: 10 # time between checking for new battles
+
+socket: ws://sim.smogon.com:8000/showdown/websocket # if you don't know what this is, don't touch it
