@@ -118,7 +118,7 @@ EM.run do
         end
       when "win" || "tie"
         ws.send("#{room[1..-1]}|/leave")
-        $battle_rooms.delete(battle)
+        $battle_rooms.delete(room)
       else
         puts "#{room}: #{message.inspect}"
       end
