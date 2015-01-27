@@ -117,7 +117,7 @@ EM.run do
           ws.send("|/w #{message[2]}, I'm a bot. Please PM my creator, Piccolo. He hangs out in Other Metas. If Piccolo isn't on, try Smogon (username: Piccolo Daimao)")
         end
       when "win" || "tie"
-        ws.send("#{room[1..-1]}|/leave")
+        ws.send("#{room}|/leave")
         puts "Leaving #{room}"
         $battle_rooms.delete(room)
       else
