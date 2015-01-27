@@ -63,7 +63,7 @@ EM.run do
 
   ws.on :open do |e|
     puts "Connected!"
-    $battle_rooms = []
+    $battle_rooms = {}
   end
 
   ws.on :message do |e|
@@ -107,7 +107,7 @@ EM.run do
             unless $battle_rooms.include? battle
               puts "Joining #{battle}"
               ws.send("|/join #{battle}")
-              $battle_rooms << battle
+              $battle_rooms[battle] = {}
             end
           end
         end
