@@ -108,8 +108,6 @@ EM.run do
               puts "Joining #{battle}"
               ws.send("|/join #{battle}")
               $battle_rooms << battle
-              ws.send("#{battle}|/rank")  # requests ranks of battlers for data logging purposes
-                                          # the rank updating thing at the end of battles only applies to ranked games
             end
           end
         end
