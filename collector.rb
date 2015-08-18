@@ -20,29 +20,11 @@ end
 
 config = YAML.load(File.open(CONFIG))
 
-USERNAME = config["username"]
-PASSWORD = config["password"]
 TIER = config["tier"]
 POLL_LENGTH = config["poll_length"]
 SOCKET = config["socket"]
 
 module Utils
-  def self.login name, pass, challenge, challengekeyid, &callback
-    EM::HttpRequest.new("https://play.pokemonshowdown.com/action.php").post(body: {
-      'act' => 'login',
-      'name' => name,
-      'pass' => pass,
-      'challengekeyid' => challengekeyid.to_i,
-      'challenge' => challenge} ).callback { |http|
-
-      callback.call(JSON.parse(http.response[1..-1])["assertion"]) # PS returns a ']' before the json
-    }
-  end
-
-  def self.condense_name name
-    name.downcase.gsub(/[^A-Za-z0-9]/, '')
-  end
-
   def self.parse_battle_list data, format
     battles = []
     data["rooms"].each do |key, value|
@@ -61,6 +43,9 @@ EM.run do
 
   ws.on :open do |e|
     puts "Connected!"
+    refresh_timer = EventMachine::PeriodicTimer.new(POLL_LENGTH) do
+      ws.send("|/cmd roomlist")
+    end
   end
 
   ws.on :message do |e|
@@ -75,11 +60,6 @@ EM.run do
       next if !message[1]
 
       case message[1].downcase
-      when "challstr"
-        refresh_timer = EventMachine::PeriodicTimer.new(POLL_LENGTH) do
-          ws.send("|/cmd roomlist")
-        end
-      when "updateuser"
       when "queryresponse"
         if message[2] == "roomlist"
           battles = Utils::parse_battle_list(JSON.parse(message[3]), TIER) # get all battles that are of format TIER
