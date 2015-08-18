@@ -1,6 +1,3 @@
-username: your_cool_bot
-password: very_secure_p4ssW0RD
-
 tier: 1v1 # case sensitive
 
 poll_length: 10 # time between checking for new battles
