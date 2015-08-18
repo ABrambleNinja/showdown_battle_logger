@@ -81,49 +81,20 @@ EM.run do
 
       case message[1].downcase
       when "challstr"
-        Utils::login(USERNAME, PASSWORD, message[3], message[2]) do |assertion|
-          if assertion.nil?
-            raise "Could not login."
-          end
-
-          ws.send("|/trn #{USERNAME},0,#{assertion}")
+        refresh_timer = EventMachine::PeriodicTimer.new(POLL_LENGTH) do
+          ws.send("|/cmd roomlist")
         end
       when "updateuser"
-        if Utils::condense_name(message[2]) == Utils::condense_name(USERNAME)
-          puts "Successfully logged in as #{USERNAME}."
-          INITIAL_COMMANDS.each do |command|
-            puts "Running command: #{command}"
-            ws.send(command)
-          end
-
-          refresh_timer = EventMachine::PeriodicTimer.new(POLL_LENGTH) do
-            ws.send("|/cmd roomlist")
-          end
-        else
-          puts "Error logging in: #{message[2]}"
-        end
       when "queryresponse"
         if message[2] == "roomlist"
-          battles = Utils::parse_battle_list(JSON.parse(message[3]), TIER)
+          battles = Utils::parse_battle_list(JSON.parse(message[3]), TIER) # get all battles that are of format TIER
           battles.each do |battle_id|
-            unless joined_battles.any? {|joined_battle| joined_battle.battle_id == battle_id}
+            unless joined_battles.any? {|joined_battle| joined_battle.battle_id == battle_id} # if we're not already in them
               puts "Joining #{battle_id}"
               ws.send("|/join #{battle_id}")
               joined_battles << Battle.new(battle_id)
             end
           end
-        end
-      when "pm"
-        unless Utils::condense_name(message[2][1..-1]) == Utils::condense_name(USERNAME) # if sent by the bot, ignore
-          invite = false
-          content = message[4].split(" ")
-          if (content[0] == "/invite")
-            if (content.length > 1)
-              ws.send("|/join #{content[1]}")
-              invite = true
-            end
-          end
-          ws.send("|/w #{message[2]}, I'm a bot. Please PM my creator, Piccolo. He hangs out in Other Metas. If Piccolo isn't on, try Smogon (username: Piccolo Daimao)") unless invite
         end
       when "c", "c:"
         # do nothing
