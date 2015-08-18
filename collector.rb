@@ -2,11 +2,6 @@
 
 CONFIG = "config.yml"
 
-INITIAL_COMMANDS = [
-  "|/avatar 51",
-  "|/join othermetas"
-] # commands to send upon login
-
 require 'faye/websocket'
 require 'net/http'
 require 'uri'
