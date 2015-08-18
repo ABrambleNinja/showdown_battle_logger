@@ -16,6 +16,8 @@ require 'eventmachine'
 require 'em-http-request'
 require 'pry'
 
+require './battle'
+
 unless File.exist? CONFIG
   puts "Error - no config file. Please copy config-example.yml to config.yml."
   exit
@@ -60,10 +62,10 @@ end
 
 EM.run do
   ws = Faye::WebSocket::Client.new(SOCKET)
+  joined_battles = []
 
   ws.on :open do |e|
     puts "Connected!"
-    $battle_rooms = {}
   end
 
   ws.on :message do |e|
@@ -102,30 +104,48 @@ EM.run do
         end
       when "queryresponse"
         if message[2] == "roomlist"
-          battles = Utils::parse_battle_list JSON.parse(message[3]), TIER
-          battles.each do |battle|
-            unless $battle_rooms.include? battle
-              puts "Joining #{battle}"
-              ws.send("|/join #{battle}")
-              $battle_rooms[battle] = {}
+          battles = Utils::parse_battle_list(JSON.parse(message[3]), TIER)
+          battles.each do |battle_id|
+            unless joined_battles.any? {|joined_battle| joined_battle.battle_id == battle_id}
+              puts "Joining #{battle_id}"
+              ws.send("|/join #{battle_id}")
+              joined_battles << Battle.new(battle_id)
             end
           end
         end
       when "pm"
         unless Utils::condense_name(message[2][1..-1]) == Utils::condense_name(USERNAME) # if sent by the bot, ignore
-          p message
-          ws.send("|/w #{message[2]}, I'm a bot. Please PM my creator, Piccolo. He hangs out in Other Metas. If Piccolo isn't on, try Smogon (username: Piccolo Daimao)")
+          invite = false
+          content = message[4].split(" ")
+          if (content[0] == "/invite")
+            if (content.length > 1)
+              ws.send("|/join #{content[1]}")
+              invite = true
+            end
+          end
+          ws.send("|/w #{message[2]}, I'm a bot. Please PM my creator, Piccolo. He hangs out in Other Metas. If Piccolo isn't on, try Smogon (username: Piccolo Daimao)") unless invite
         end
-      when "win" || "tie"
-        ws.send("#{room}|/leave")
-        puts "Leaving #{room}"
-        $battle_rooms.delete(room)
+      when "c", "c:"
+        # do nothing
       else
-        puts "#{room}: #{message.inspect}" if room.start_with? "battle-#{TIER}-"
+        battle = joined_battles.find {|joined_battle| joined_battle.battle_id == room}
+        next if battle.nil?
+        battle.log(message.join("|"))
+        if message[1].downcase == "win" or message[1].downcase == "tie"
+          puts "Leaving room #{room}"
+          ws.send("#{room}|/leave")
+          battle.close
+          joined_battles.delete(battle)
+        end
       end
     end
   end
   ws.on :close do |e|
     puts "Disconnected"
+  end
+
+  Signal.trap("INT") do
+    joined_battles.each {|battle| battle.close }
+    exit
   end
 end
