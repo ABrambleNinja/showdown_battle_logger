@@ -18,7 +18,7 @@ end
 
 config = YAML.load(File.open(CONFIG))
 if config["tiers"].is_a? Array
-  TIERS = config["tiers"].downcase
+  TIERS = config["tiers"].map(&:downcase)
 else
   TIERS = [config["tiers"]].map(&:downcase)
 end
