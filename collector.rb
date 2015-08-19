@@ -5,13 +5,9 @@
 CONFIG = "config.yml"
 
 require 'faye/websocket'
-require 'net/http'
-require 'uri'
 require 'json'
 require 'yaml'
 require 'eventmachine'
-require 'em-http-request'
-require 'pry'
 
 require './battle'
 
