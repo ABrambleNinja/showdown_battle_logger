@@ -17,18 +17,22 @@ unless File.exist? CONFIG
 end
 
 config = YAML.load(File.open(CONFIG))
+if config["tiers"].is_a? Array
+  TIERS = config["tiers"].downcase
+else
+  TIERS = [config["tiers"]].map(&:downcase)
+end
 
-TIER = config["tier"]
 POLL_LENGTH = config["poll_length"]
 SOCKET = config["socket"]
 
 module Utils
-  def self.parse_battle_list data, format
+  def self.parse_battle_list data, formats
     battles = []
+
     data["rooms"].each do |key, value|
-      if /^battle-#{format}-\d+$/.match(key) # if there's a battle that matches the correct format
-        battles << key
-      end
+      tier = /^battle-((\w|-)+)-\d+$/.match(key).captures[0] # what tier is the battle
+      battles << key if formats.include? tier
     end
     battles
   end
@@ -60,7 +64,7 @@ EM.run do
       case message[1].downcase
       when "queryresponse"
         if message[2] == "roomlist"
-          battles = Utils::parse_battle_list(JSON.parse(message[3]), TIER) # get all battles that are of format TIER
+          battles = Utils::parse_battle_list(JSON.parse(message[3]), TIERS) # get all battles that are any of the formats contained in TIERS
           battles.each do |battle_id|
             unless joined_battles.any? {|joined_battle| joined_battle.battle_id == battle_id} # if we're not already in them
               puts "Joining #{battle_id}"
