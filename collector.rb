@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# Written by ABrambleNinja, based heavily on pickdenis's ps-chatbot <github.com/pickdenis/ps-chatbot>
+# Released under MIT license, see LICENSE for details
 
 CONFIG = "config.yml"
 
