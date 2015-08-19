@@ -7,7 +7,6 @@ class Battle
   end
 
   def log(message)
-    puts "#{@battle_id}: #{message}"
     @logfile.write(message + "\n")
   end
 
